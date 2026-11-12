@@ -149,14 +149,6 @@ def g_theme(p):
 def g_sound(p): p.poly([(.1, .38), (.28, .38), (.5, .18), (.5, .82), (.28, .62), (.1, .62)]); p.arc(.5, .5, .2, -50, 50, .075); p.arc(.5, .5, .36, -50, 50, .075)
 def g_star(p):
     p.poly([(.5 + math.cos(-math.pi / 2 + k * math.pi / 5) * (.2 if k % 2 else .46), .52 + math.sin(-math.pi / 2 + k * math.pi / 5) * (.2 if k % 2 else .46)) for k in range(10)])
-def g_sig(n):
-    def f(p):
-        for i in range(4):
-            x = .14 + i * .2
-            if i < n: p.rect(x, .78 - i * .2, x + .13, .9)
-            else: p.rect(x, .84, x + .13, .9)
-    return f
-
 GLYPHS = {
     "icon-Shutdown": (47, 46, g_shutdown), "icon-TF": (19, 24, g_tf), "icon-brightness-48": (48, 48, g_brightness),
     "icon-device-info-48": (48, 48, g_info), "icon-factory-reset-48": (48, 49, g_reset), "icon-folder": (60, 60, g_folder),
@@ -164,8 +156,6 @@ GLYPHS = {
     "icon-left-arrow-24": (24, 24, g_left), "icon-right-arrow-24": (24, 24, g_right), "icon-setting-wifi": (46, 46, g_wifi),
     "icon-theme": (46, 46, g_theme), "color": (44, 44, g_theme), "icon-wifi-connected": (48, 48, g_wifi_ok),
     "icon-wifi-locked": (48, 48, g_wifi_lock), "sound-icon": (48, 48, g_sound),
-    "icon-wifi-signal-01": (46, 46, g_sig(1)), "icon-wifi-signal-02": (46, 46, g_sig(2)),
-    "icon-wifi-signal-03": (46, 46, g_sig(3)), "icon-wifi-signal-04": (46, 46, g_sig(4)),
 }
 
 def glyph(fn, w, h, color):
@@ -328,17 +318,57 @@ def panel(c, w, h, box=None, hl=False, fw=2):
     frame(img, box, c["accent"] if hl else c["dim"], fw, fill=c["hl"] if hl else c["panel"])
     return img
 
-def battery_small(c, level, bolt=False):
-    p = Pen(88, 48, c["ink"]); s = SS
-    d = p.d
-    d.rounded_rectangle((2 * s, 10 * s, 17 * s, 41 * s), radius=3 * s, outline=p.c, width=2 * s)
-    d.rectangle((6 * s, 7 * s, 13 * s, 10 * s), fill=p.c)
-    if level > 0:
-        top = 37 - round(23 * level)
-        d.rectangle((6 * s, top * s, 13 * s, 37 * s), fill=rgb(c["low"] if level <= .2 else c["accent"]))
+# Top-bar icons, drawn the way each theme draws its tiles: dithered densities for Landform, blocks for Keep.
+BOLT = ["...##.", "..##..", ".##...", "#####.", ".#####", "...##.", "..##..", ".##..."]
+
+def lf_signal(c, n):
+    d = np.full((23, 23), -1.0)
+    for i in range(4):
+        x = 2 + i * 5
+        if i < n: d[16 - i * 4:21, x:x + 4] = (.45, .62, .8, 1)[i]
+        else: d[20:21, x:x + 4] = 1
+    return stipple(d, 2, c["iconInk"])
+
+def lf_battery(c, level, bolt=False):
+    """A core sample: solid casing, dithered up to the level line."""
+    d = np.full((24, 44), -1.0); low = np.full((24, 44), -1.0)
+    d[3:5, 3:7] = 1; d[5:21, 1:9] = 1; d[6:20, 2:8] = -1
     if bolt:
-        d.polygon([(11 * s, 15 * s), (6 * s, 27 * s), (9.5 * s, 27 * s), (8 * s, 36 * s), (13 * s, 24 * s), (9.5 * s, 24 * s)], fill=p.c)
-    return down(p.img, 88, 48)
+        for r, row in enumerate(BOLT):
+            for k, ch in enumerate(row):
+                if ch == "#": d[9 + r, 2 + k] = 1
+    elif level > 0:
+        top = 20 - max(2, round(14 * level))
+        if level <= .2: d[top:20, 2:8] = -1; low[top:20, 2:8] = 1
+        else: d[top:20, 2:8] = .62; d[top, 2:8] = 1
+    img = stipple(d, 2, c["iconInk"])
+    return stipple(low, 2, c["low"], img)
+
+def shades(top, side=None):
+    side = side or top
+    return (top, mix(side, "#000000", .28), mix(side, "#000000", .5))
+
+def keep_signal(c, n):
+    img = new(46 * SS, 46 * SS); d = ImageDraw.Draw(img); a = 6.5 * SS
+    for i in (3, 2, 1, 0):  # back to front
+        on = i < n
+        col(d, 11.5 * SS, 36.5 * SS, a, 0, -i * 1.2, 0, .9 + i * .8 if on else .25, c["block"] if on else shades(c["dim"]))
+    return down(img, 46, 46)
+
+def keep_battery(c, level, bolt=False):
+    """A block column: the charge fills it from the ground up."""
+    img = new(88 * SS, 48 * SS); d = ImageDraw.Draw(img); a = 8.5 * SS; ox, oy, Z = 10 * SS, 35.5 * SS, 3.1
+    z = 0 if bolt else max(Z * level, .8 if level else 0)
+    if z > 0:
+        col(d, ox, oy, a, 0, 0, 0, z, (mix(c["low"], "#ffffff", .3), c["low"], mix(c["low"], "#000000", .25)) if level <= .2 else c["acc"])
+    if z < Z: col(d, ox, oy, a, 0, 0, z, Z, shades(c["dim"]))
+    col(d, ox, oy - Z * a - 2.5 * SS, 3.5 * SS, 0, 0, 0, .6, c["block"])
+    if bolt:
+        s = SS; d.polygon([(11.5 * s, 17 * s), (5 * s, 31 * s), (9.5 * s, 31 * s), (8 * s, 42 * s), (15 * s, 27 * s), (10.5 * s, 27 * s)], fill=rgb(c["ink"]))
+    return down(img, 88, 48)
+
+def signal_icon(c, n): return (lf_signal if c["kind"] == "landform" else keep_signal)(c, n)
+def battery_icon(c, level, bolt=False): return (lf_battery if c["kind"] == "landform" else keep_battery)(c, level, bolt)
 
 def battery_big(c, w, h, bars, total=4, ink=None, fill=None):
     """Horizontal battery, used for the charging screens."""
@@ -502,8 +532,9 @@ def build(c):
     save(new(640, 4, rgb(c["dim"], 150)), "div-line-h"); save(new(4, 360, rgb(c["dim"], 150)), "div-line-v-01"); save(new(1, 60), "icon-game")
     logo = new(148, 42); text(logo, (0, 21), c["word"], font(c["fTitle"], 28), c["ink"], "lm"); save(logo, "miyoo-topbar")
     for lvl, nm in ((0, "power-0%-icon"), (.2, "power-20%-icon"), (.5, "power-50%-icon"), (.8, "power-80%-icon"), (1, "power-full-icon")):
-        save(battery_small(c, lvl), nm)
-    save(battery_small(c, 0, bolt=True), "ic-power-charge-100%")
+        save(battery_icon(c, lvl), nm)
+    save(battery_icon(c, 0, bolt=True), "ic-power-charge-100%")
+    for k in range(1, 5): save(signal_icon(c, k), f"icon-wifi-signal-0{k}")
     for k in range(1, 6):
         im = new(192, 96); im.alpha_composite(battery_big(c, 172, 76, k - 1), (10, 10)); save(im, f"charging-0{k}")
     fp = font(c["fBold"], 15)
@@ -552,7 +583,7 @@ def build(c):
 
     # preview: a device screenshot from previews/ when there is one, else composed from the assets
     pv = bg.copy(); pv.alpha_composite(bar(c, 60, True)); pv.alpha_composite(bar(c, 60, False), (0, 420))
-    pv.alpha_composite(logo, (20, 9)); pv.alpha_composite(battery_small(c, .8), (540, 6)); text(pv, (566, 30), "87%", font(c["fBold"], 18), c["ink"], "lm")
+    pv.alpha_composite(logo, (20, 9)); pv.alpha_composite(signal_icon(c, 4), (506, 8)); pv.alpha_composite(battery_icon(c, .8), (553, 6)); text(pv, (578, 30), "87%", font(c["fBold"], 18), c["ink"], "lm")
     for k in range(4):
         i = k + 1
         pv.alpha_composite(icons[(i, "f" if k == 1 else "n")], (8 + k * 156, 66))
