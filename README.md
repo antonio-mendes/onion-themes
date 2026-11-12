@@ -32,6 +32,5 @@ Themes app (Onion 3.9 or later).
 
 ## Status
 
-Tested on a Miyoo Mini Plus running Onion. `preview.png` is still composed
-from the assets and should be replaced with a real screenshot before
-submitting to [OnionUI/Themes](https://github.com/OnionUI/Themes).
+Tested on a Miyoo Mini Plus running Onion. Each theme's `preview.png` is a
+device screenshot, kept at full size in `previews/`.

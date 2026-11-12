@@ -555,7 +555,7 @@ def build(c):
            "list": {"font": c["fList"], "size": s[2], "color": c["ink"]}}
     with open(os.path.join(root, "config.json"), "w") as f: json.dump(cfg, f, indent=4); f.write("\n")
 
-    # mock preview (the repo wants a real device screenshot; this is a stand-in)
+    # preview: a device screenshot from previews/ when there is one, else composed from the assets
     pv = bg.copy(); pv.alpha_composite(bar(c, 60, True)); pv.alpha_composite(bar(c, 60, False), (0, 420))
     pv.alpha_composite(logo, (20, 9)); pv.alpha_composite(battery_small(c, .8), (540, 6)); text(pv, (566, 30), "87%", font(c["fBold"], 18), c["ink"], "lm")
     for k in range(4):
@@ -565,6 +565,8 @@ def build(c):
     fh = font(c["fGrid"], c["sizes"][3])
     pv.alpha_composite(button(c, "A", True), (20, 434)); text(pv, (60, 450), "SELECT", fh, c["ink"], "lm")
     pv.alpha_composite(button(c, "B", False), (190, 434)); text(pv, (230, 450), "BACK", fh, c["ink"], "lm")
+    shot = os.path.join(os.path.dirname(os.path.abspath(__file__)), "previews", c["name"] + ".png")
+    if os.path.exists(shot): pv = Image.open(shot).convert("RGBA")  # real device screenshot
     pv.save(os.path.join(root, "preview-full.png")); pv.resize((480, 360), Image.LANCZOS).save(os.path.join(root, "preview.png"))
 
     zpath = os.path.join(OUT, folder + ".zip")
