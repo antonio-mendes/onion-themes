@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 OUT = sys.argv[1]
 AUTHOR = sys.argv[2] if len(sys.argv) > 2 else "antonio-mendes"
+VERSION = "1.0"  # shown after each theme's description; bump it with every release and note the change in CHANGELOG.md
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 FONT_LICENSE = {"Caladea": "LICENSE-Caladea.txt", "JetBrainsMono": "LICENSE-JetBrainsMono.txt", "DejaVuSans": "LICENSE-DejaVu.txt"}
 W, H = 640, 480
@@ -572,7 +573,7 @@ def build(c):
         shutil.copy(os.path.join(FONT_DIR, f), os.path.join(root, f))
         shutil.copy(os.path.join(FONT_DIR, FONT_LICENSE[f.split("-")[0].split(".")[0]]), root)  # the font licences require their notice to ship with the font
     s = c["sizes"]
-    cfg = {"name": c["name"], "author": AUTHOR, "description": c["desc"],
+    cfg = {"name": c["name"], "author": AUTHOR, "description": f"{c['desc']} (v{VERSION})",
            "batteryPercentage": {"visible": True, "color": c["ink"], "size": 18, "offsetX": 26, "fixed": True},
            "title": {"font": c["fTitle"], "size": s[0], "color": c["ink"]},
            "hint": {"font": c["fGrid"], "size": s[3], "color": c["ink"]},
