@@ -48,6 +48,12 @@ the font it uses.
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | Landform Night, Keep Ember | [SIL Open Font License 1.1](fonts/LICENSE-JetBrainsMono.txt) |
 | [DejaVu Sans](https://dejavu-fonts.github.io/) | Keep Sandstone | [Bitstream Vera licence](fonts/LICENSE-DejaVu.txt) |
 
+## Licence
+
+- `build.py`: [MIT](LICENSE).
+- Theme assets (images, sounds, the zips in `release/`): [CC BY 4.0](LICENSE-assets.md).
+- Fonts: their own licences, listed above.
+
 ## Status
 
 Tested on a Miyoo Mini Plus running Onion. The screenshots above were taken
