@@ -526,8 +526,8 @@ def build(c):
     ln = new(90, 14); fn = font("JetBrainsMono-SemiBold.ttf", 13)
     for k in range(10): text(ln, (k * 9 + 4, 7), str(k), fn, c["dim2"])
     save(ln, "list-num")
-    p = Pen(24, 14, c["accent"]); p.circle(.5, .5, .42); save(p.out(), "dot-a")
-    p = Pen(24, 14, c["dim2"]); p.circle(.5, .5, .36, .12); save(p.out(), "dot-n")
+    p = Pen(24, 14, c["accent"]); p.circle(.5, .5, .42); dot_a = p.out(); save(dot_a, "dot-a")
+    p = Pen(24, 14, c["dim2"]); p.circle(.5, .5, .36, .12); dot_n = p.out(); save(dot_n, "dot-n")
     p = Pen(8, 8, c["accent"]); p.circle(.5, .5, .5); save(p.out(), "progress-dot")
     save(new(640, 4, rgb(c["dim"], 150)), "div-line-h"); save(new(4, 360, rgb(c["dim"], 150)), "div-line-v-01"); save(new(1, 60), "icon-game")
     logo = new(148, 42); text(logo, (0, 21), c["word"], font(c["fTitle"], 28), c["ink"], "lm"); save(logo, "miyoo-topbar")
@@ -581,18 +581,16 @@ def build(c):
            "list": {"font": c["fList"], "size": s[2], "color": c["ink"]}}
     with open(os.path.join(root, "config.json"), "w") as f: json.dump(cfg, f, indent=4); f.write("\n")
 
-    # preview: a device screenshot from previews/ when there is one, else composed from the assets
+    # preview, composed from the assets the way the main menu lays them out (Expert hidden, as by default)
     pv = bg.copy(); pv.alpha_composite(bar(c, 60, True)); pv.alpha_composite(bar(c, 60, False), (0, 420))
     pv.alpha_composite(logo, (20, 9)); pv.alpha_composite(signal_icon(c, 4), (506, 8)); pv.alpha_composite(battery_icon(c, .8), (553, 6)); text(pv, (578, 30), "87%", font(c["fBold"], 18), c["ink"], "lm")
-    for k in range(4):
-        i = k + 1
-        pv.alpha_composite(icons[(i, "f" if k == 1 else "n")], (8 + k * 156, 66))
-        text(pv, (8 + k * 156 + 78, 66 + 221), LABELS[i], fg, c["selInk"] if k == 1 else c["ink"])
+    for k, i in enumerate((1, 2, 3, 5)):
+        pv.alpha_composite(icons[(i, "f" if k == 1 else "n")], (10 + k * 155, 66))
+        text(pv, (10 + k * 155 + 78, 66 + 219), LABELS[i], fg, c["selInk"] if k == 1 else c["ink"])
+        pv.alpha_composite(dot_a if k == 1 else dot_n, (262 + k * 29, 390))
     fh = font(c["fGrid"], c["sizes"][3])
-    pv.alpha_composite(button(c, "A", True), (20, 434)); text(pv, (60, 450), "SELECT", fh, c["ink"], "lm")
-    pv.alpha_composite(button(c, "B", False), (190, 434)); text(pv, (230, 450), "BACK", fh, c["ink"], "lm")
-    shot = os.path.join(os.path.dirname(os.path.abspath(__file__)), "previews", c["name"] + ".png")
-    if os.path.exists(shot): pv = Image.open(shot).convert("RGBA")  # real device screenshot
+    pv.alpha_composite(button(c, "A", True), (20, 434)); text(pv, (57, 450), "SELECT", fh, c["ink"], "lm")
+    pv.alpha_composite(button(c, "B", False), (159, 434)); text(pv, (196, 450), "BACK", fh, c["ink"], "lm")
     pv.save(os.path.join(root, "preview-full.png")); pv.resize((480, 360), Image.LANCZOS).save(os.path.join(root, "preview.png"))
 
     zpath = os.path.join(OUT, folder + ".zip")
