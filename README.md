@@ -34,10 +34,19 @@ python3 build.py out "Your Name"
 This writes one folder and one `[NAME] by [AUTHOR].zip` per theme into `out/`.
 The zips in `release/` are copies of that output.
 
-Requirements: Python 3 with `numpy` and `Pillow`, `ffmpeg`, and the Caladea,
-JetBrains Mono and DejaVu fonts installed at the paths listed in `FONTS` at the
-top of `build.py` (Debian/Ubuntu: `fonts-crosextra-caladea`,
-`fonts-jetbrains-mono`, `fonts-dejavu-core`).
+Requirements: Python 3 with `numpy` and `Pillow`, and `ffmpeg`. The fonts are
+in `fonts/`, so nothing needs to be installed system-wide.
+
+## Fonts
+
+The themes bundle these fonts, unmodified. Each zip includes the licence of
+the font it uses.
+
+| Font | Used by | Licence |
+|---|---|---|
+| [Caladea](https://github.com/huertatipografica/Caladea) | Landform Paper | [SIL Open Font License 1.1](fonts/LICENSE-Caladea.txt) |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | Landform Night, Keep Ember | [SIL Open Font License 1.1](fonts/LICENSE-JetBrainsMono.txt) |
+| [DejaVu Sans](https://dejavu-fonts.github.io/) | Keep Sandstone | [Bitstream Vera licence](fonts/LICENSE-DejaVu.txt) |
 
 ## Status
 
