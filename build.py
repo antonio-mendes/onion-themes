@@ -491,7 +491,8 @@ def build(c):
     save(panel(c, 640, 330, (44, 10, 596, 320)), "pop-bg")
     for k, h in ((1, 70), (2, 130), (3, 190)): save(panel(c, 320, h), f"bg-pop-menu-{k}")
     save(panel(c, 232, 68, hl=True), "bg-button-f")
-    save(panel(c, 154, 170, (4, 4, 150, 166), fw=1), "bg-game-item-n"); save(panel(c, 154, 170, (4, 4, 150, 166), hl=True, fw=3), "bg-game-item-f")
+    save(panel(c, 154, 170, (4, 4, 150, 166), fw=1), "bg-game-item-n"); gf = new(154, 170); frame(gf, (4, 4, 150, 166), None, fill=c["sel"])  # filled so the selected label (selInk) stays readable
+    save(gf, "bg-game-item-f")
     save(panel(c, 214, 120, fw=1), "bg-ra-list-item")
     save(panel(c, 256, 364, (6, 6, 250, 358), fw=2), "preview-bg")
     th = panel(c, 212, 304, (4, 4, 208, 300), fw=2)
