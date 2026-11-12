@@ -22,7 +22,7 @@ strength 1 to 4, then battery at 0, 20, 50, 80 and 100 % and while charging:
 
 ![Top-bar signal and battery icons](previews/topbar.png)
 
-Each theme also carries an icon pack for the Games tab: 74 systems plus
+Each theme also carries an icon pack for the Games tab: 72 systems plus
 search, each a device shape in the theme's style with a short tag. The second
 icon in each row is the selected state:
 

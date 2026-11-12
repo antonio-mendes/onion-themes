@@ -4,7 +4,7 @@ The version is shown after each theme's description in the Themes app.
 
 ## 1.1 (2026-11-12)
 
-- Console icon pack in every theme: 74 systems plus search, with selected
+- Console icon pack in every theme: 72 systems plus search, with selected
   variants (`icons/` and `icons/sel/`).
 - Version number added to the theme description.
 
