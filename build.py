@@ -9,15 +9,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 OUT = sys.argv[1]
 AUTHOR = sys.argv[2] if len(sys.argv) > 2 else "antonio-mendes"
-FONTS = {
-    "Caladea-Bold.ttf": "/usr/share/fonts/truetype/crosextra/Caladea-Bold.ttf",
-    "Caladea-Italic.ttf": "/usr/share/fonts/truetype/crosextra/Caladea-Italic.ttf",
-    "Caladea-Regular.ttf": "/usr/share/fonts/truetype/crosextra/Caladea-Regular.ttf",
-    "JetBrainsMono-SemiBold.ttf": "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
-    "JetBrainsMono-Regular.ttf": "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-Regular.ttf",
-    "DejaVuSans-Bold.ttf": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    "DejaVuSans.ttf": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-}
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
+FONT_LICENSE = {"Caladea": "LICENSE-Caladea.txt", "JetBrainsMono": "LICENSE-JetBrainsMono.txt", "DejaVuSans": "LICENSE-DejaVu.txt"}
 W, H = 640, 480
 FRAMES = 24
 SS = 4
@@ -37,7 +30,7 @@ def ramp(stops, t):
     return mix(stops[i], stops[i + 1], t - i)
 
 def font(name, size):
-    return ImageFont.truetype(FONTS[name], size)
+    return ImageFont.truetype(os.path.join(FONT_DIR, name), size)
 
 def new(w, h, fill=None):
     return Image.new("RGBA", (w, h), rgb(fill) if isinstance(fill, str) else (fill or (0, 0, 0, 0)))
@@ -575,7 +568,9 @@ def build(c):
     # sound, fonts, config
     make_change(os.path.join(snd, "change.wav"), c); make_bgm(os.path.join(snd, "bgm.mp3"), c)
     used = sorted({c["fTitle"], c["fGrid"], c["fList"]})
-    for f in used: shutil.copy(FONTS[f], os.path.join(root, f))
+    for f in used:
+        shutil.copy(os.path.join(FONT_DIR, f), os.path.join(root, f))
+        shutil.copy(os.path.join(FONT_DIR, FONT_LICENSE[f.split("-")[0].split(".")[0]]), root)  # the font licences require their notice to ship with the font
     s = c["sizes"]
     cfg = {"name": c["name"], "author": AUTHOR, "description": c["desc"],
            "batteryPercentage": {"visible": True, "color": c["ink"], "size": 18, "offsetX": 26, "fixed": True},
