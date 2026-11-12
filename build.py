@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 OUT = sys.argv[1]
 AUTHOR = sys.argv[2] if len(sys.argv) > 2 else "antonio-mendes"
+VERSION = "1.1"  # shown after each theme's description; bump it with every release and note the change in CHANGELOG.md
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 FONT_LICENSE = {"Caladea": "LICENSE-Caladea.txt", "JetBrainsMono": "LICENSE-JetBrainsMono.txt", "DejaVuSans": "LICENSE-DejaVu.txt"}
 W, H = 640, 480
@@ -414,6 +415,114 @@ def plate_screen(c, title, sub=None, art=None):
 LABELS = ["Recents", "Favorites", "Games", "Apps", "Expert", "Settings"]
 ICON_FILES = ["recent", "favorite", "game", "app", "retroarch", "setting"]
 
+# ---------------------------------------------------------------- console icons (icons/ and icons/sel/, 132x143)
+# Each system gets a device silhouette in the theme's own style plus a short tag. name: (shape, tag)
+SYSTEMS = {
+    "gb": ("hv", "GB"), "gbc": ("hv", "GBC"), "poke": ("hv", "PKMN"), "gw": ("hv", "G&W"), "megaduck": ("hv", "DUCK"),
+    "supervision": ("hv", "SV"), "arduboy": ("hv", "ARDU"),
+    "gba": ("hh", "GBA"), "gg": ("hh", "GG"), "lynx": ("hh", "LYNX"), "ngp": ("hh", "NGP"), "ngpc": ("hh", "NGPC"),
+    "ws": ("hh", "WS"), "wsc": ("hh", "WSC"), "psp": ("hh", "PSP"), "nds": ("hh", "NDS"), "vb": ("hh", "VB"),
+    "fc": ("console", "NES"), "sfc": ("console", "SNES"), "sgb": ("console", "SGB"), "sufami": ("console", "SUFAMI"),
+    "satella": ("console", "BS-X"), "msu1": ("console", "MSU1"), "md": ("console", "MD"), "msumd": ("console", "MSU-MD"),
+    "32X": ("console", "32X"), "ms": ("console", "SMS"), "segasgone": ("console", "SG1K"), "pce": ("console", "PCE"),
+    "sgfx": ("console", "SGFX"), "n64": ("console", "N64"), "atari": ("console", "2600"), "5200": ("console", "5200"),
+    "7800": ("console", "7800"), "col": ("console", "COL"), "itv": ("console", "INTV"), "ody": ("console", "ODY"),
+    "fairchild": ("console", "CHF"), "vdp": ("console", "VDP"), "vectrex": ("console", "VEC"),
+    "ps": ("disc", "PS"), "segacd": ("disc", "SCD"), "pcecd": ("disc", "PCECD"), "neocd": ("disc", "NGCD"),
+    "dc": ("disc", "DC"), "fds": ("disc", "FDS"),
+    "amiga": ("computer", "AMIGA"), "atarist": ("computer", "ST"), "c64": ("computer", "C64"), "cpc": ("computer", "CPC"),
+    "dos": ("computer", "DOS"), "msx": ("computer", "MSX"), "zxs": ("computer", "ZX"), "x68000": ("computer", "X68K"),
+    "atari800": ("computer", "A800"),
+    "arcade": ("arcade", "ARCADE"), "cps1": ("arcade", "CPS1"), "cps2": ("arcade", "CPS2"), "cps3": ("arcade", "CPS3"),
+    "neogeo": ("arcade", "NEO"), "mame": ("arcade", "MAME"),
+    "ports": ("soft", "PORTS"), "doom": ("soft", "DOOM"), "quake": ("soft", "QUAKE"), "wolf": ("soft", "WOLF"),
+    "openbor": ("soft", "OBOR"), "scummvm": ("soft", "SCUMM"), "easyrpg": ("soft", "RPG"), "tic": ("soft", "TIC80"),
+    "pico": ("soft", "PICO8"), "chai": ("soft", "CHAI"), "ffplay": ("soft", "MEDIA"),
+    "search": ("search", ""),
+}
+ICON_W, ICON_H = 132, 143
+
+def lf_device(shape):
+    """Front view of a device as a 60x42 density map (cell 2 -> 120x84 px)."""
+    d = np.full((42, 60), -1.0)
+    y, x = np.mgrid[0:42, 0:60]
+    def box(x0, y0, x1, y1, fill, edge=1.0):
+        d[y0:y1, x0:x1] = fill
+        if edge is not None:
+            d[y0, x0:x1] = edge; d[y1 - 1, x0:x1] = edge; d[y0:y1, x0] = edge; d[y0:y1, x1 - 1] = edge
+    def dpad(cx, cy): d[cy - 1:cy + 2, cx - 3:cx + 4] = 1; d[cy - 3:cy + 4, cx - 1:cx + 2] = 1
+    def dot(cx, cy, r=1.6): d[np.hypot(x - cx, y - cy) <= r] = 1
+    if shape == "hv":
+        box(18, 0, 42, 42, .12); box(22, 4, 38, 20, .7)
+        dpad(25, 29); dot(36, 27); dot(32, 31); d[37:38, 23:29] = 1; d[37:38, 31:37] = 1
+    elif shape == "hh":
+        box(4, 8, 56, 34, .12); box(19, 12, 41, 30, .7)
+        dpad(11, 21); dot(47, 18); dot(51, 23)
+    elif shape == "console":
+        box(21, 6, 39, 20, .55); d[9:11, 24:36] = 1
+        box(6, 18, 54, 36, .12); d[26:36, 7:53] = .62; d[26, 6:54] = 1
+        d[21:23, 10:18] = 1; d[21:23, 42:50] = 1; dot(14, 31, 2); dot(46, 31, 2)
+    elif shape == "disc":
+        r = np.hypot(x - 30, (y - 13) * 1.0)
+        d[r <= 12.5] = .62; d[(r <= 12.5) & (r > 11)] = 1; d[r <= 3.5] = 1; d[r <= 2] = -1
+        box(6, 22, 54, 38, .12); d[30:38, 7:53] = .62; d[30, 6:54] = 1
+        d[25:27, 10:22] = 1; dot(47, 26, 1.6)
+    elif shape == "computer":
+        box(13, 0, 47, 26, .12); box(16, 3, 44, 23, .7)
+        d[26:30, 27:33] = 1; d[29:31, 21:39] = 1
+        box(7, 33, 53, 42, .12); d[35:40, 9:51] = np.where((x[35:40, 9:51] % 3 > 0) & (y[35:40, 9:51] % 2 == 1), 1, .12)
+    elif shape == "arcade":
+        box(16, 0, 44, 8, 1.0); box(16, 7, 44, 23, .12); box(19, 9, 41, 21, .7)
+        box(12, 22, 48, 28, 1.0); d[18:22, 23:25] = 1; dot(24, 18, 1.8)
+        box(16, 27, 44, 42, .3); d[31:38, 26:34] = .85
+    elif shape == "soft":
+        body = (x >= 15) & (x < 45) & (y >= 3) & (y < 39) & ~((x - 45) + (9 - y) > 0)
+        d[body] = .12
+        edge = body & ~np.roll(body, 1, 0) | body & ~np.roll(body, -1, 0) | body & ~np.roll(body, 1, 1) | body & ~np.roll(body, -1, 1)
+        d[edge] = 1
+        box(21, 3, 37, 13, .85); d[5:11, 31:34] = -1
+        box(19, 19, 41, 39, .45); d[24, 22:38] = 1; d[29, 22:38] = 1; d[34, 22:32] = 1
+    else:  # search
+        r = np.hypot(x - 25, y - 17)
+        d[r <= 15] = .3; d[(r <= 15) & (r > 12.5)] = 1
+        t = (x - y - 8); d[(np.abs(t) <= 2.2) & (x + y >= 62) & (x + y <= 92)] = 1
+    return d
+
+DEV_VOX = {  # (x, y, z0, z1[, accent]); scale, dx, dy
+    "hv": ([(x, y, 0, .5) for y in range(3) for x in range(2)] + [(0, 0, .5, .75, 1), (1, 0, .5, .75, 1), (0, 1, .5, .75, 1), (1, 1, .5, .75, 1), (.5, 2.1, .5, .8)], (17, 6, 2)),
+    "hh": ([(x, y, 0, .5) for y in range(2) for x in range(4)] + [(1, .5, .5, .75, 1), (2, .5, .5, .75, 1), (0, .5, .5, .8), (3.1, .5, .5, .8)], (15, -9, 8)),
+    "console": ([(x, y, 0, 1) for y in range(2) for x in range(3)] + [(1, .5, 1, 1.8, 1), (.3, 2.8, 0, .35), (1.3, 2.8, 0, .35)], (16, -2, 0)),
+    "disc": ([(x, y, 0, .8) for y in range(3) for x in range(3)] + [(x, y, .8, 1.05, 1) for y in (.5, 1.5) for x in (.5, 1.5)] + [(1, 1, 1.05, 1.3)], (15, 0, -6)),
+    "computer": ([(x, 0, 0, .5) for x in range(3)] + [(x, 0, .5, 2.1, 1) for x in range(3)] + [(x, 0, 2.1, 2.4) for x in range(3)] + [(x, 1.7, 0, .35) for x in range(3)], (15, 0, 14)),
+    "arcade": ([(x, 0, 0, 1.4) for x in range(2)] + [(x, 0, 1.4, 2.6, 1) for x in range(2)] + [(x, 0, 2.6, 3.1) for x in range(2)] + [(x, 1, 0, 1.2) for x in range(2)] + [(.5, 1, 1.2, 1.6, 1)], (14, 4, 20)),
+    "soft": ([(x, y, 0, 1.5) for y in range(2) for x in range(2)] + [(.5, .5, 1.5, 2.1, 1)], (18, 5, 8)),
+}
+
+def keep_device(shape, c, selected, w=ICON_W, h=96):
+    if shape == "search":
+        p = Pen(w, h, (c["blockSel"] if selected else c["block"])[0])
+        p.circle(.42, .42, .3, .09); p.line([(.64, .64), (.86, .86)], .12)
+        return p.out()
+    img = new(w * SS, h * SS); d = ImageDraw.Draw(img)
+    vox, (a, dx, dy) = DEV_VOX[shape]
+    for v in sorted(vox, key=lambda v: (v[2], v[0] + v[1])):
+        pal = (c.get("accSel", c["acc"]) if selected else c["acc"]) if len(v) > 4 and v[4] else (c["blockSel"] if selected else c["block"])
+        col(d, (w / 2 + dx) * SS, (h / 2 - 6 + dy) * SS, a * SS, v[0] - 1, v[1] - 1, v[2], v[3], pal)
+    return down(img, w, h)
+
+def console_icon(name, c, selected):
+    shape, tag = SYSTEMS[name]
+    img = new(ICON_W, ICON_H)
+    ink = c["selInk"] if selected else (c["iconInk"] if c["kind"] == "landform" else c["ink"])
+    top = 4 if tag else 14
+    if c["kind"] == "landform": stipple(lf_device(shape), 2, ink, img, (6, top))
+    else: img.alpha_composite(keep_device(shape, c, selected), (0, top - 2))
+    if tag:
+        size = 21
+        while font(c["fBold"], size).getlength(tag) > 118: size -= 1
+        text(img, (ICON_W // 2, 101), tag, font(c["fBold"], size), ink)
+    return img
+
 # ---------------------------------------------------------------- sound
 def write_wav(path, sig, sr):
     sig = np.clip(sig, -1, 1)
@@ -565,6 +674,15 @@ def build(c):
         save(fr.convert("RGB"), f"chargingState{k}", extra)
     with open(os.path.join(extra, "chargingState.json"), "w") as f: f.write('{ "frame_delay": 110 }\n')
 
+    # console icon pack: icons/NAME.png, icons/sel/NAME.png (selected) and icons/preview.png for the theme repository
+    ico = os.path.join(root, "icons"); os.makedirs(os.path.join(ico, "sel"))
+    for nm in SYSTEMS:
+        save(console_icon(nm, c, False), nm, ico); save(console_icon(nm, c, True), nm, os.path.join(ico, "sel"))
+    ip = new(250, 360, c["bg"])
+    for k, nm in enumerate(("gb", "gba", "fc", "ps", "dos", "arcade")):
+        ip.alpha_composite(console_icon(nm, c, False).crop((4, 0, 128, 116)), (1 + (k % 2) * 124, 3 + (k // 2) * 119))
+    save(ip.convert("RGB"), "preview", ico)
+
     # sound, fonts, config
     make_change(os.path.join(snd, "change.wav"), c); make_bgm(os.path.join(snd, "bgm.mp3"), c)
     used = sorted({c["fTitle"], c["fGrid"], c["fList"]})
@@ -572,7 +690,7 @@ def build(c):
         shutil.copy(os.path.join(FONT_DIR, f), os.path.join(root, f))
         shutil.copy(os.path.join(FONT_DIR, FONT_LICENSE[f.split("-")[0].split(".")[0]]), root)  # the font licences require their notice to ship with the font
     s = c["sizes"]
-    cfg = {"name": c["name"], "author": AUTHOR, "description": c["desc"],
+    cfg = {"name": c["name"], "author": AUTHOR, "description": f"{c['desc']} (v{VERSION})",
            "batteryPercentage": {"visible": True, "color": c["ink"], "size": 18, "offsetX": 26, "fixed": True},
            "title": {"font": c["fTitle"], "size": s[0], "color": c["ink"]},
            "hint": {"font": c["fGrid"], "size": s[3], "color": c["ink"]},
@@ -606,3 +724,12 @@ if __name__ == "__main__":
     for c in THEMES:
         root, z = build(c)
         print(z, round(os.path.getsize(z) / 1024), "KB")
+    # overview of the console icons, one row per theme, the second icon of each row selected
+    names = ("gb", "gba", "fc", "ps", "dos", "arcade", "ports", "search")
+    sheet = new(len(names) * 154 + 8, len(THEMES) * 126)
+    for r, c in enumerate(THEMES):
+        sheet.alpha_composite(new(sheet.width, 126, c["bg"]), (0, r * 126))
+        frame(sheet, (4 + 154 + 4, r * 126 + 3, 4 + 154 + 150, r * 126 + 123), None, fill=c["sel"])
+        for k, nm in enumerate(names):
+            sheet.alpha_composite(console_icon(nm, c, k == 1).crop((0, 0, ICON_W, 118)), (4 + k * 154 + 11, r * 126 + 5))
+    sheet.convert("RGB").save(os.path.join(OUT, "console-icons.png"), optimize=True)
