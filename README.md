@@ -61,10 +61,8 @@ the font it uses.
 
 ## Status
 
-Tested on a Miyoo Mini Plus running Onion. The four menu screenshots were
-taken on the device, before the top-bar icons were redrawn, so they still show
-the earlier signal and battery icons. The top-bar image is rendered from the
-theme files.
+Tested on a Miyoo Mini Plus running Onion. The images above are rendered by
+`build.py` from the theme files, not captured on the device.
 
 Submitted to the official theme repository in
 [OnionUI/Themes#51](https://github.com/OnionUI/Themes/pull/51).
