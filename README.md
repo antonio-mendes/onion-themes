@@ -17,6 +17,11 @@ a menu music loop and a charging animation:
 
 ![Charging animations](previews/charging.gif)
 
+The top-bar icons are drawn the same way as each theme's tiles. Signal
+strength 1 to 4, then battery at 0, 20, 50, 80 and 100 % and while charging:
+
+![Top-bar signal and battery icons](previews/topbar.png)
+
 ## Install
 
 Copy a zip into the `Themes` folder on the SD card and apply it from the
@@ -50,8 +55,10 @@ the font it uses.
 
 ## Status
 
-Tested on a Miyoo Mini Plus running Onion. The screenshots above were taken
-on the device.
+Tested on a Miyoo Mini Plus running Onion. The four menu screenshots were
+taken on the device, before the top-bar icons were redrawn, so they still show
+the earlier signal and battery icons. The top-bar image is rendered from the
+theme files.
 
 Submitted to the official theme repository in
 [OnionUI/Themes#51](https://github.com/OnionUI/Themes/pull/51).
